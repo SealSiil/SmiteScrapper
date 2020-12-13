@@ -5,6 +5,10 @@ import pandas as pd
 
 
 def process(match, match_num, playersdict):
+    ''' The function extracts information from the given match by connecting to Smite.guru.  Takes three inputs: match an interger that repersents the match ID from Smite, 
+    match_num is a interger that prevents the player enties in the playersdict for overlapping, 
+    playersdict is a dictionary that is used to hold the records obtained from the scrapping.
+    '''
     website = 'https://smite.guru/match/' + str(match)
     matchweb = requests.get(website)
     soup = BeautifulSoup(matchweb.text, 'html.parser')
@@ -51,50 +55,36 @@ def process(match, match_num, playersdict):
     return playersdict
 
 
+def find_matches(username):
+    '''A function that finds all the match IDs that a given user has played.
+    Taking as input a string username, and outputs a list of the matches.
+    '''
+    page = 1
+    new_matches = []
+    matches = []
+    while new_matches or page == 1:
+        website = f'https://smite.guru/profile/{username}/matches?page={page}'
+        response = requests.get(website)
+        new_matches = pattern.findall(response.text)
+        matches = matches + new_matches
+        page += 1
+    print(f"{username} games stop at: {page}")
+    return matches
+
+
 pattern = re.compile(r'href=\"\/match\/(\d*)')
 matchList = []
 failures = []
 match_num = 0
+accounts = ["5339344-Stagefault", "6434393-PantsuRaider",
+            "440605-JDiablo6G6", "11056361-zdude18"]
+file_path = r"C:/Users/jason/Desktop/Coding/pythonProgramMemes/smitedata.xlsx"
 playersdict = {}
 
 
-try:
-    for page in range(1, 100):
-        website = f'https://smite.guru/profile/5339344-Stagefault/matches?page={page}'
-        response = requests.get(website)
-        print(response.status_code)
-        matchList = matchList + pattern.findall(response.text)
-except:
-    print(f"Chris games stop at: {page}")
+for account in accounts:
+    matchList += find_matches(account)
 
-try:
-    for page in range(1, 100):
-        website = f'https://smite.guru/profile/5339344-Stagefault/matches?page={page}'
-        response = requests.get(website)
-        print(response.status_code)
-        matchList = matchList + pattern.findall(response.text)
-except:
-    print(f"Zach games stop at: {page}")
-
-
-try:
-    for page in range(1, 100):
-        website = f'https://smite.guru/profile/5339344-Stagefault/matches?page={page}'
-        response = requests.get(website)
-        print(response.status_code)
-        matchList = matchList + pattern.findall(response.text)
-except:
-    print(f"Jason games stop at: {page}")
-
-
-try:
-    for page in range(1, 100):
-        website = f'https://smite.guru/profile/5339344-Stagefault/matches?page={page}'
-        response = requests.get(website)
-        print(response.status_code)
-        matchList = matchList + pattern.findall(response.text)
-except:
-    print(f"Ben games stop at: {page}")
 
 match_set = set(matchList)
 
@@ -119,5 +109,4 @@ for match in failures:
 
 
 smite_df = pd.DataFrame.from_dict(playersdict, orient='index')
-smite_df.to_excel(
-    r"C:/Users/jason/Desktop/Coding/pythonProgramMemes/smitedata.xlsx", index=False)
+smite_df.to_excel(file_path, index=False)
